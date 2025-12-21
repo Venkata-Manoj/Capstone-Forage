@@ -1,0 +1,404 @@
+{
+  "name": "Capstone PDF Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "sheetName": "Form Responses 1",
+        "options": {
+          "scope": [
+            "https://www.googleapis.com/auth/drive.file",
+            "https://www.googleapis.com/auth/spreadsheets"
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['Upload Reference PDF'] }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check PDF Upload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json['Upload Reference PDF'] }}",
+          "mode": "id"
+        }
+      },
+      "id": "3",
+      "name": "Get User PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [650, 200],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_TEMPLATE_PDF_ID",
+          "mode": "id"
+        }
+      },
+      "id": "4",
+      "name": "Get Template PDF",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [650, 400],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractText"
+      },
+      "id": "5",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.readPDF",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "={{ JSON.stringify([{\n  \"parts\": [{\n    \"text\": `You are an expert academic writer. Create a complete college capstone project document based on the following:\n\nREFERENCE STRUCTURE:\n${$('Extract PDF Text').item.json.text}\n\nNEW CAPSTONE REQUIREMENTS:\n- Title: ${$('Google Sheets Trigger').item.json['Capstone Title']}\n- Student Name(s): ${$('Google Sheets Trigger').item.json['Student Name(s)']}\n- Registration Number(s): ${$('Google Sheets Trigger').item.json['Registration Number(s)']}\n- Course: ${$('Google Sheets Trigger').item.json['Course Name and Code']}\n- Supervisor: ${$('Google Sheets Trigger').item.json['Supervisor/Advisor Name']}\n- Date: ${$('Google Sheets Trigger').item.json['Date of Submission']}\n- Module Titles: ${$('Google Sheets Trigger').item.json['Module Titles'] || 'Use standard modules'}\n- Requirements: ${$('Google Sheets Trigger').item.json['Project Component Requirements'] || 'Standard capstone requirements'}\n- Task: ${$('Google Sheets Trigger').item.json['Task'] || 'Not specified'}\n- Parameters: ${$('Google Sheets Trigger').item.json['Specific Parameters'] || 'Standard parameters'}\n- Outcome: ${$('Google Sheets Trigger').item.json['Outcome/Outcome Parameters'] || 'Standard outcomes'}\n- Techniques: ${$('Google Sheets Trigger').item.json['Techniques to be used'] || 'Standard techniques'}\n\nIMPORTANT FORMATTING RULES:\n1. Follow the exact structure from the reference PDF\n2. Use professional academic formatting\n3. Include all standard sections: Abstract, Introduction, Literature Review, Methodology, Results, Discussion, Conclusion, References\n4. Use APA citation style\n5. Maintain consistent formatting: 12pt Times New Roman, 1.5 line spacing, 1-inch margins\n6. Each section should be detailed and relevant to the topic\n7. Generate realistic and coherent content\n\nGenerate the COMPLETE capstone document in Markdown format with proper headings, sections, and formatting.`\n  }]\n}]) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Gemini AI Generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract generated text from Gemini response\nconst response = $input.item.json;\nconst generatedText = response.candidates[0].content.parts[0].text;\n\n// Get form data\nconst formData = $('Google Sheets Trigger').item.json;\n\n// Create HTML content with proper formatting\nconst htmlContent = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    @page {\n      margin: 1in;\n      size: A4;\n    }\n    body {\n      font-family: 'Times New Roman', serif;\n      font-size: 12pt;\n      line-height: 1.5;\n      color: #000;\n    }\n    h1 {\n      font-size: 18pt;\n      font-weight: bold;\n      text-align: center;\n      margin-top: 0;\n      margin-bottom: 24pt;\n    }\n    h2 {\n      font-size: 14pt;\n      font-weight: bold;\n      margin-top: 18pt;\n      margin-bottom: 12pt;\n    }\n    h3 {\n      font-size: 12pt;\n      font-weight: bold;\n      margin-top: 12pt;\n      margin-bottom: 6pt;\n    }\n    p {\n      margin-bottom: 12pt;\n      text-align: justify;\n    }\n    .title-page {\n      text-align: center;\n      margin-top: 100pt;\n    }\n    .metadata {\n      margin-top: 50pt;\n      text-align: center;\n      line-height: 2;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"title-page\">\n    <h1>${formData['Capstone Title']}</h1>\n    <div class=\"metadata\">\n      <p><strong>Submitted by:</strong><br>${formData['Student Name(s)']}</p>\n      <p><strong>Registration Number:</strong><br>${formData['Registration Number(s)']}</p>\n      <p><strong>Course:</strong><br>${formData['Course Name and Code']}</p>\n      <p><strong>Supervisor:</strong><br>${formData['Supervisor/Advisor Name']}</p>\n      <p><strong>Date:</strong><br>${formData['Date of Submission']}</p>\n    </div>\n  </div>\n  <div style=\"page-break-before: always;\"></div>\n  ${generatedText.replace(/#{1,6}\\s/g, match => {\n    const level = match.trim().length;\n    return level === 1 ? '<h1>' : level === 2 ? '<h2>' : '<h3>';\n  }).replace(/\\n\\n/g, '</p><p>').replace(/^(?!<h)/gm, '<p>').replace(/$(?!<\\/h)/gm, '</p>')}\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    htmlContent: htmlContent,\n    fileName: `${formData['Capstone Title'].replace(/[^a-z0-9]/gi, '_')}_${formData['Registration Number(s)'].replace(/[^a-z0-9]/gi, '_')}.pdf`,\n    userEmail: formData['User Email'],\n    capstoneTitle: formData['Capstone Title']\n  }\n};"
+      },
+      "id": "7",
+      "name": "Format Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.html2pdf.app/v1/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"html\": $json.htmlContent,\n  \"landscape\": false,\n  \"printBackground\": true,\n  \"format\": \"A4\"\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "8",
+      "name": "Convert to PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 300],
+      "notes": "Note: html2pdf.app has free tier. Alternative: Use Gotenberg (self-hosted) or Cloudconvert API"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $('Format Content').item.json.fileName }}",
+        "resolveData": true,
+        "parents": {
+          "__rl": true,
+          "value": "YOUR_GENERATED_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "9",
+      "name": "Save to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1650, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "2",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Format Content').item.json.userEmail }}",
+        "subject": "Your Capstone PDF is Ready! 🎓",
+        "message": "=Hello,\\n\\nThank you for using our Capstone Generator! 🎉\\n\\nYour capstone project titled \\\"{{ $('Format Content').item.json.capstoneTitle }}\\\" has been generated successfully.\\n\\nPlease find the attached PDF document. Review it carefully and make any necessary adjustments.\\n\\n✨ Love our service? Share it with your friends and classmates!\\n\\nBest regards,\\nCapstone Generator Team",
+        "options": {
+          "attachments": "data",
+          "fileName": "={{ $('Format Content').item.json.fileName }}"
+        }
+      },
+      "id": "10",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1850, 300],
+      "credentials": {
+        "smtp": {
+          "id": "3",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": "Form Responses 1",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Completed",
+            "Generated PDF Link": "={{ $('Save to Drive').item.json.webViewLink }}",
+            "Completion Date": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "11",
+      "name": "Update Sheet Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2050, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Save to Drive').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "parents": {
+            "parents": [
+              "YOUR_REFERENCES_FOLDER_ID"
+            ]
+          }
+        }
+      },
+      "id": "12",
+      "name": "Archive to References",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [2250, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "2",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check PDF Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check PDF Upload": {
+      "main": [
+        [
+          {
+            "node": "Get User PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Template PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Template PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Generate": {
+      "main": [
+        [
+          {
+            "node": "Format Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Content": {
+      "main": [
+        [
+          {
+            "node": "Convert to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to PDF": {
+      "main": [
+        [
+          {
+            "node": "Save to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Drive": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet Status": {
+      "main": [
+        [
+          {
+            "node": "Archive to References",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}
