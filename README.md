@@ -180,7 +180,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend will run on:
-`http://localhost:8000`
+`[http://localhost:8000](http://0.0.0.0:8000)`
 
 ---
 
@@ -217,7 +217,6 @@ cap_builder/
 │   ├── config.py
 │   ├── database.py
 │   ├── requirements.txt
-│   ├── schema.sql
 │   ├── extractors/
 │   │   ├── pdf_extractor.py
 │   │   ├── docx_extractor.py
@@ -256,38 +255,6 @@ cap_builder/
 ├── faiss_indexes/
 └── .env
 ```
-
----
-
-## 🔧 API Endpoints
-
-### Upload File
-
-```http
-POST /api/upload
-Content-Type: multipart/form-data
-```
-
-### Generate Report
-
-```http
-POST /api/generate
-Content-Type: application/json
-```
-
-### Download Report
-
-```http
-GET /api/download/{report_id}?format=docx
-GET /api/download/{report_id}?format=pdf
-```
-
-### List Reports
-
-```http
-GET /api/reports
-```
-
 ---
 
 ## 🎨 UI Features
@@ -351,4 +318,5 @@ Please refer to the troubleshooting section above for common issues.
 **Built with ❤️ using AI, Python, React, and modern web technologies**
 
 ```
+
 
