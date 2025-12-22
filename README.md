@@ -8,7 +8,7 @@
 
 ---
 
-**CapstoneForge** is a complete, production-ready AI-powered system that automatically generates institution-compliant capstone reports (15+ pages) from reference files and user-provided titles.
+**CapstoneForge** is a developing AI-powered system that automatically generates institution-compliant capstone reports (15+ pages) from reference files and user-provided titles. (Currently Limited to 1 institution)
 
 ---
 
@@ -19,8 +19,8 @@
 - **Multi-Format Support**: Upload PDF, DOCX, PPTX, PNG, JPG files
 - **Intelligent Extraction**: Automatic heading detection, section extraction, OCR fallback
 - **RAG Pipeline**: Semantic chunking, embeddings, FAISS vector store
-- **Dual AI Support**: OpenAI GPT-4 + Google Gemini with automatic fallback
-- **Complete Reports**: 15+ sections including cover, abstract, all chapters, viva Q&A
+- **Multi-Model AI Support**: Ollama with automatic fallback
+- **Complete Reports**: 15+ sections including cover, abstract, all chapters
 - **Multiple Formats**: Export to DOCX and PDF
 
 ---
@@ -44,7 +44,6 @@
 15. Future Enhancements  
 16. References  
 17. Appendix  
-18. Viva Q&A Pack (15+ questions with answers)
 
 ---
 
@@ -54,9 +53,8 @@
 
 - **Document Extraction**: PyPDF2, python-docx, python-pptx, Tesseract OCR  
 - **RAG Pipeline**: sentence-transformers, FAISS  
-- **AI Generation**: OpenAI API, Google Gemini API  
+- **AI Generation**: Ollama 
 - **Document Building**: python-docx, LibreOffice/docx2pdf  
-- **Database**: Supabase (PostgreSQL)  
 - **Storage**: Local filesystem (production: S3/MinIO)
 
 ### Frontend (React + Vite)
@@ -76,8 +74,7 @@
 - Node.js 18+
 - Tesseract OCR
 - LibreOffice (for PDF conversion)
-- Supabase account (free tier)
-- OpenAI API key OR Google Gemini API key
+- Ollama
 
 ### Optional
 
@@ -90,7 +87,7 @@
 ### 1. Clone Repository
 
 ```bash
-cd cap_builder
+cd Capstone-Forage
 ````
 
 ---
@@ -122,30 +119,36 @@ notepad .env
 **Required Environment Variables:**
 
 ```env
-# Supabase
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_role_key
 
-# AI API Keys (provide at least one)
-OPENAI_API_KEY=your_openai_api_key
-GEMINI_API_KEY=your_gemini_api_key
+# Ollama Configuration
+OLLAMA_BASE_URL=http://localhost:[sample]
+OLLAMA_MODEL=model_1
+OLLAMA_MODEL_FALLBACK_1=model_2
+OLLAMA_MODEL_FALLBACK_2=model_3
 
-# JWT Secret
-SECRET_KEY=your_random_secret_key_here
+# AI Settings
+EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+MAX_TOKENS=8000
+TEMPERATURE=0.7
 
-# Paths (update if different)
+# File Upload Settings
+MAX_UPLOAD_SIZE=52428800
+UPLOAD_DIR=./uploads
+GENERATED_DIR=./generated
+
+# Vector Store
+FAISS_INDEX_DIR=./faiss_indexes
+
+# LibreOffice Path (for PDF conversion)
 LIBREOFFICE_PATH=C:\\Program Files\\LibreOffice\\program\\soffice.exe
+
+# CORS Settings
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Tesseract OCR Path
 TESSERACT_CMD=C:\\Program Files\\Tesseract-OCR\\tesseract.exe
+
 ```
-
----
-
-#### Setup Supabase Database
-
-1. Go to your Supabase project
-2. Navigate to SQL Editor
-3. Run the SQL script from `backend/schema.sql`
 
 ---
 
@@ -171,9 +174,9 @@ cd ..
 # Activate venv
 .\\venv\\Scripts\\activate
 
-# Start FastAPI server
+
 cd backend
-python main.py
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend will run on:
@@ -189,13 +192,13 @@ npm run dev
 ```
 
 Frontend will run on:
-`http://localhost:3000`
+` http://localhost:5173/`
 
 ---
 
 ### Generate a Report
 
-1. **Open Browser**: Navigate to `http://localhost:3000`
+1. **Open Browser**: Navigate to `http://localhost:5173`
 2. **Go to Generate**: Click "Generate Report" or navigate to `/generate`
 3. **Upload File**: Drag and drop or select your reference file (PDF, DOCX, PPTX, image)
 4. **Fill Details**: Enter project title and optional metadata
@@ -306,15 +309,6 @@ GET /api/reports
 
 ---
 
-## 🔒 Security
-
-* JWT-based authentication (ready for implementation)
-* Supabase Row Level Security (RLS)
-* File type and size validation
-* API rate limiting (recommended)
-
----
-
 ## 🚧 Limitations (V1)
 
 * No built-in plagiarism detection
@@ -344,7 +338,7 @@ This project is for educational purposes.
 
 ## 🤝 Contributing
 
-This is a capstone project. Contributions welcome after initial release.
+This is a self project. Contributions welcome.
 
 ---
 
@@ -357,3 +351,4 @@ Please refer to the troubleshooting section above for common issues.
 **Built with ❤️ using AI, Python, React, and modern web technologies**
 
 ```
+
