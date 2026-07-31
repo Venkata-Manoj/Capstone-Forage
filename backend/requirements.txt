@@ -12,3 +12,8 @@ pdfplumber
 docxtpl
 # AI Providers
 ollama
+# Document Processing
+pytesseract
+python-pptx
+# Vector Store
+faiss-cpu
