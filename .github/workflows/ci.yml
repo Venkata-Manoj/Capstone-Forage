@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ruff==0.15.20"
+      - name: Lint with ruff
+        run: ruff check backend/
+
+  validate:
+    name: Validate project structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required directories and files
+        run: |
+          set -e
+          for p in backend frontend backend/main.py backend/requirements.txt Dockerfile; do
+            if [ -e "$p" ]; then echo "✅ $p exists"; else echo "❌ $p missing"; exit 1; fi
+          done
+          echo "✅ structure validated"
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
