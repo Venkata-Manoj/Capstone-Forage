@@ -17,3 +17,8 @@ ignore = ["F401", "E722", "E402", "F541", "E501"]
 [tool.ruff.format]
 quote-style = "double"
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["backend"]
+addopts = "-v --tb=short"
