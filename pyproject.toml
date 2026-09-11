@@ -1,0 +1,24 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv", "venv", "__pycache__", "frontend", "node_modules", "generated"]
+
+[tool.ruff.lint]
+# E: pycodestyle, F: pyflakes — baseline for backend hygiene
+select = ["E", "F"]
+# ── Temporary debt ignores (remove after cleanup) ──────────────────────
+# F401 unused-import  — ~15 occurrences (config, database, extractors, etc.)
+# E722 bare-except    — docx_builder / extractors use bare `except:`
+# E402 import-not-at-top — main.py / routes/generate.py deferred imports
+# F541 f-string-missing-placeholders — reproduce_issue.py
+ignore = ["F401", "E722", "E402", "F541", "E501"]
+# ───────────────────────────────────────────────────────────────────────
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["backend"]
+addopts = "-v --tb=short"
